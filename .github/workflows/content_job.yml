@@ -2,7 +2,7 @@ name: Content Engine
 
 on:
   schedule:
-    - cron: '0 4 * * *' # Runs at 4:00 AM UTC (After Factory runs)
+    - cron: '0 4 * * *' # Runs at 4:00 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -27,7 +27,8 @@ jobs:
 
       - name: Publish Content
         env:
-          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+          # 🔥 FIX: Variable name must match Python code (DEVTO_KEY_NEW)
+          DEVTO_KEY_NEW: ${{ secrets.DEVTO_KEY_NEW }} 
           HASHNODE_TOKEN: ${{ secrets.HASHNODE_TOKEN }}
           HASHNODE_PUB_ID: ${{ secrets.HASHNODE_PUB_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -35,5 +36,5 @@ jobs:
           SMTP_EMAIL: ${{ secrets.SMTP_EMAIL }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           BLOGGER_EMAIL: ${{ secrets.BLOGGER_EMAIL }}
-          # TUMBLR_EMAIL: ${{ secrets.TUMBLR_EMAIL }} # Commented out until fixed
         run: python publisher.py
+
