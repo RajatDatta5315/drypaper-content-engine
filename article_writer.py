@@ -1,73 +1,44 @@
-import requests, os, json
-import xml.etree.ElementTree as ET
+import os, json, requests
 
-print("--- ✍️ GEO CONTENT ENGINE STARTED ---")
+print("--- ✍️ CONTENT ENGINE: SEO MODE ---")
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-# 1. FETCH LATEST PRODUCT FROM RSS
-def get_latest_product():
-    try:
-        r = requests.get("https://www.drypaperhq.com/feed.xml")
-        root = ET.fromstring(r.content)
-        # Namespace map because Google Merchant uses 'g:'
-        ns = {'g': 'http://base.google.com/ns/1.0'}
-        
-        latest_item = root.find("channel/item") # Gets the first (newest) item
-        
-        product = {
-            "name": latest_item.find("g:title", ns).text,
-            "desc": latest_item.find("g:description", ns).text,
-            "link": "https://www.drypaperhq.com", # Store Link
-            "image": latest_item.find("g:image_link", ns).text,
-            "price": latest_item.find("g:price", ns).text
-        }
-        return product
-    except Exception as e:
-        print(f"❌ RSS Error: {e}")
-        exit()
+try:
+    with open("products.json", "r") as f:
+        product = json.load(f)[0]
+except:
+    product = {"name": "AI Tool", "desc": "Automation"}
 
-product = get_latest_product()
-print(f"🎯 Targeted Product: {product['name']}")
-
-# 2. GENERATE GEO ARTICLE (Using Your Prompt)
-def write_article():
+def write_article(tone):
     prompt = f"""
-    Role: You are a Generative Engine Optimization (GEO) Expert.
-    Task: Write a high-quality, educational blog post about: "How to automate {product['name']} for agencies".
-    
-    Strict GEO Guidelines:
-    1. Hook: Start with a 40-60 word direct answer summary.
-    2. Tone: Conversational, no jargon. Use phrases like "best tool for X".
-    3. Structure: Use H1, H2, H3 and Bullet Points.
-    4. Authority: Mention "Efficiency increased by 30%" type metrics.
-    5. FAQ Section: Mandatory at the end.
-    
-    The Product to mention naturally as the solution: {product['name']}.
-    Product Link: {product['link']}
-    Price: {product['price']}
-    
-    Output ONLY the Markdown content.
+    Write a generic blog post about "{product['name']}".
+    Focus: {product['desc']}
+    Tone: {tone}
+    Format: Markdown.
+    Title: High CTR Title.
+    Length: 400 words.
     """
-    
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": "llama-3.3-70b-versatile",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7
+        "messages": [{"role": "user", "content": prompt}]
     }
-    
-    try:
-        r = requests.post(url, headers=headers, data=json.dumps(payload))
-        return r.json()['choices'][0]['message']['content'].strip()
-    except: return None
+    return requests.post(url, headers=headers, data=json.dumps(payload)).json()['choices'][0]['message']['content']
 
-article_md = write_article()
+# Generate 3 Versions
+print("📝 Writing Version 1 (Technical)...")
+art1 = write_article("Technical and detailed for Developers")
+with open("article_dev.md", "w") as f: f.write(art1)
 
-if article_md:
-    # Save to file so other scripts can use it
-    with open("daily_article.md", "w") as f: f.write(article_md)
-    print("✅ GEO Article Generated: daily_article.md")
-else:
-    print("❌ AI Generation Failed")
+print("📝 Writing Version 2 (Business)...")
+art2 = write_article("Business focused for Founders")
+with open("article_hashnode.md", "w") as f: f.write(art2)
+
+print("📝 Writing Version 3 (Casual)...")
+art3 = write_article("Casual and storytelling for Bloggers")
+with open("article_blogger.md", "w") as f: f.write(art3)
+
+print("✅ SEO Content Generated.")
+
